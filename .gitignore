@@ -1,0 +1,28 @@
+# Environment Variables & Secrets (CRITICAL)
+.env
+.env.local
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Streamlit Cache & Runtime
+.streamlit/
+*.log
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+
+# User Uploads (Keep folder structure, ignore user files)
+uploads/*
+!uploads/.gitkeep
