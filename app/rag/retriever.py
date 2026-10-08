@@ -17,6 +17,7 @@ def retrieve_context(
     query: str,
     top_k: int = 4,
     company_name: Optional[str] = None,
+    filename: Optional[str] = None,
     min_similarity: float = 0.30
 ) -> List[Dict[str, Any]]:
     """
@@ -26,6 +27,7 @@ def retrieve_context(
         query (str): The candidate's question.
         top_k (int): Number of top chunks to retrieve (default: 4).
         company_name (Optional[str]): Target company to restrict search to.
+        filename (Optional[str]): Target document filename to restrict search to.
         min_similarity (float): Minimum cosine similarity threshold (0.0 to 1.0).
 
     Returns:
@@ -38,7 +40,8 @@ def retrieve_context(
         raw_chunks = similarity_search(
             query=query.strip(),
             top_k=top_k,
-            company_name=company_name
+            company_name=company_name,
+            filename=filename
         )
 
         # Filter out chunks that do not meet the minimum similarity threshold

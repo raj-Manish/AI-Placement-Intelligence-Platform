@@ -92,7 +92,8 @@ def store_document_chunks(
 def similarity_search(
     query: str,
     top_k: int = 4,
-    company_name: Optional[str] = None
+    company_name: Optional[str] = None,
+    filename: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """
     Performs cosine similarity search using pgvector's <=> distance operator.
@@ -101,6 +102,7 @@ def similarity_search(
         query (str): User question or search query.
         top_k (int): Number of most relevant chunks to retrieve.
         company_name (Optional[str]): Optional company filter.
+        filename (Optional[str]): Optional specific document filename filter.
 
     Returns:
         List[Dict[str, Any]]: Top-k relevant chunks with text, page citations, and scores.
@@ -126,7 +128,9 @@ def similarity_search(
                 .join(Document, DocumentChunk.document_id == Document.id)
             )
 
-            if company_name:
+            if filename:
+                query_builder = query_builder.filter(Document.filename == filename)
+            elif company_name:
                 query_builder = query_builder.filter(Document.company_name.ilike(f"%{company_name}%"))
 
             results = (

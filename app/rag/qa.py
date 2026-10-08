@@ -98,6 +98,7 @@ def extract_unique_sources(chunks: List[Dict[str, Any]]) -> List[str]:
 def ask_copilot(
     question: str,
     company_name: Optional[str] = None,
+    filename: Optional[str] = None,
     student_profile: Optional[Dict[str, Any]] = None,
     top_k: int = 4
 ) -> Dict[str, Any]:
@@ -111,6 +112,7 @@ def ask_copilot(
     Args:
         question (str): Student's query.
         company_name (Optional[str]): Optional company name filter.
+        filename (Optional[str]): Optional document filename filter.
         student_profile (Optional[Dict]): Optional candidate profile dictionary.
         top_k (int): Number of chunks to retrieve.
 
@@ -137,7 +139,8 @@ def ask_copilot(
         chunks = retrieve_context(
             query=question.strip(),
             top_k=top_k,
-            company_name=company_name
+            company_name=company_name,
+            filename=filename
         )
     except RetrievalError as e:
         raise QAError(f"Retrieval error: {str(e)}")
@@ -209,7 +212,8 @@ def ask_copilot(
 
 def analyze_candidate_fit(
     student_profile: Dict[str, Any],
-    company_name: Optional[str] = None
+    company_name: Optional[str] = None,
+    filename: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Convenience method for Module 1.1 Personalized Fit Analysis:
@@ -227,6 +231,7 @@ def analyze_candidate_fit(
     return ask_copilot(
         question=fit_question,
         company_name=company_name,
+        filename=filename,
         student_profile=student_profile,
         top_k=5
     )

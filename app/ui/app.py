@@ -149,11 +149,40 @@ with tab_rag:
     )
 
     # Active JD Selector
+    available_docs = get_all_documents()
+    doc_filenames = [d["filename"] for d in available_docs]
+
     col_sel1, col_sel2 = st.columns([3, 1])
     with col_sel1:
-        st.info(f"**Active Job Description:** `{st.session_state.uploaded_filename}`")
+        if doc_filenames:
+            # Set default index
+            current_idx = 0
+            if st.session_state.uploaded_filename in doc_filenames:
+                current_idx = doc_filenames.index(st.session_state.uploaded_filename)
+
+            selected_doc = st.selectbox(
+                "📂 Select Active Job Description:",
+                options=doc_filenames,
+                index=current_idx,
+                help="Choose which ingested Job Description to query and analyze against."
+            )
+            st.session_state.uploaded_filename = selected_doc
+
+            selected_meta = next((d for d in available_docs if d["filename"] == selected_doc), None)
+            if selected_meta:
+                st.caption(
+                    f"🏢 **Company:** {selected_meta.get('company_name', 'N/A')}  |  "
+                    f"🧩 **Indexed Chunks:** {selected_meta.get('chunk_count', 0)}  |  "
+                    f"📅 **Uploaded:** {selected_meta.get('uploaded_at', 'N/A')}"
+                )
+        else:
+            st.warning("⚠️ No Job Descriptions found in database. Ingest a JD in the **Ingest Job Descriptions** tab.")
+            st.session_state.uploaded_filename = None
+
     with col_sel2:
-        if st.button("🔄 Reload Documents"):
+        st.write("")
+        st.write("")
+        if st.button("🔄 Refresh Documents", use_container_width=True):
             st.rerun()
 
     st.markdown("---")
@@ -163,15 +192,19 @@ with tab_rag:
     st.caption("Compares your profile directly against the active JD requirements.")
 
     if st.button("🔍 Analyze My Profile Against This JD", type="primary"):
-        with st.spinner("Analyzing profile against JD requirements..."):
-            try:
-                fit_result = analyze_candidate_fit(
-                    student_profile=st.session_state.student_profile.to_dict(),
-                    company_name=None
-                )
-                st.session_state.last_analysis = fit_result
-            except Exception as e:
-                st.error(f"Analysis failed: {str(e)}")
+        if not st.session_state.uploaded_filename:
+            st.warning("Please select or ingest a Job Description first.")
+        else:
+            with st.spinner(f"Analyzing profile against '{st.session_state.uploaded_filename}'..."):
+                try:
+                    fit_result = analyze_candidate_fit(
+                        student_profile=st.session_state.student_profile.to_dict(),
+                        company_name=None,
+                        filename=st.session_state.uploaded_filename
+                    )
+                    st.session_state.last_analysis = fit_result
+                except Exception as e:
+                    st.error(f"Analysis failed: {str(e)}")
 
     if st.session_state.last_analysis:
         res = st.session_state.last_analysis
@@ -204,13 +237,16 @@ with tab_rag:
     )
 
     if st.button("🚀 Ask Copilot"):
-        if not user_query.strip():
+        if not st.session_state.uploaded_filename:
+            st.warning("Please select or ingest a Job Description first.")
+        elif not user_query.strip():
             st.warning("Please type a question before submitting.")
         else:
-            with st.spinner("Searching JD and generating grounded answer..."):
+            with st.spinner(f"Searching '{st.session_state.uploaded_filename}' and generating grounded answer..."):
                 try:
                     qa_result = ask_copilot(
                         question=user_query,
+                        filename=st.session_state.uploaded_filename,
                         student_profile=st.session_state.student_profile.to_dict(),
                         top_k=4
                     )
