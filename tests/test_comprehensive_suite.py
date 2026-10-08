@@ -187,7 +187,7 @@ def run_comprehensive_test_suite():
     print(" -> TEST CASE 9 PASSED: Weak fit correctly placed at bottom of rankings.")
 
     # -------------------------------------------------------------
-    # TEST CASE 10: Missing Student Profile Fields
+    # TEST CASE 10: Missing & Invalid Student Profile Fields Guard
     # -------------------------------------------------------------
     print("\n[TEST CASE 10] Missing & Invalid Profile Fields Guard")
     # Sub-case A: Empty skills
@@ -211,7 +211,21 @@ def run_comprehensive_test_suite():
     except ProfileValidationError as e:
         print(f" -> Correctly rejected negative experience: '{e}'")
 
-    print(" -> TEST CASE 10 PASSED: All defensive input guards verified.")
+    # Sub-case D: Invalid CPI (> 10)
+    try:
+        StudentProfile.from_form_inputs("Test", "Python", "SDE", 12, 0, cpi_raw=11.5, branch_raw="CSE")
+        raise AssertionError("CPI > 10 should have failed!")
+    except ProfileValidationError as e:
+        print(f" -> Correctly rejected invalid CPI: '{e}'")
+
+    # Sub-case E: Empty Branch
+    try:
+        StudentProfile.from_form_inputs("Test", "Python", "SDE", 12, 0, cpi_raw=8.0, branch_raw="")
+        raise AssertionError("Empty branch should have failed!")
+    except ProfileValidationError as e:
+        print(f" -> Correctly rejected empty branch: '{e}'")
+
+    print(" -> TEST CASE 10 PASSED: All defensive input guards (including CPI & Branch) verified.")
 
     print("\n" + "=" * 70)
     print("CONGRATULATIONS! ALL 10 COMPREHENSIVE PLACEMENT TEST CASES PASSED!")

@@ -108,7 +108,9 @@ def match_companies(
         )
 
         hiring_score, hiring_explanation = calculate_hiring_history_score(
-            hiring_history=comp["hiring_history"]
+            hiring_history=comp["hiring_history"],
+            candidate_cpi=getattr(profile, "cpi", None),
+            candidate_branch=getattr(profile, "branch", None)
         )
 
         # 2. Weighted total score
@@ -127,7 +129,7 @@ def match_companies(
             f"Skills: Matched {len(matched_skills)} of {len(matched_skills) + len(missing_skills)} required technologies ({skill_score}%)",
             f"Role: {role_explanation} ({role_score}%)",
             f"Salary: {salary_explanation} ({salary_score}%)",
-            f"Hiring Track Record: {hiring_explanation} ({hiring_score}%)"
+            f"Hiring & Eligibility: {hiring_explanation} ({hiring_score}%)"
         ]
 
         result_entry = {

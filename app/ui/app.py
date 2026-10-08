@@ -43,7 +43,9 @@ def initialize_session_state():
             skills=["C++", "Python", "SQL", "React", "Node.js"],
             preferred_roles=["Software Engineer", "Backend Developer"],
             expected_salary=14.0,
-            experience=0.0
+            experience=0.0,
+            cpi=8.5,
+            branch="Computer Science"
         )
     if "last_analysis" not in st.session_state:
         st.session_state.last_analysis = None
@@ -87,6 +89,48 @@ with st.sidebar:
     # 2. Candidate Profile Form
     st.subheader("Candidate Profile")
     p_name = st.text_input("Name", value=st.session_state.student_profile.name)
+
+    branch_options = [
+        "Computer Science",
+        "Information Technology",
+        "Electronics & Communication",
+        "Electrical Engineering",
+        "Mechanical Engineering",
+        "Civil Engineering",
+        "Data Science / AI",
+        "Other Engineering"
+    ]
+    curr_branch = getattr(st.session_state.student_profile, "branch", "Computer Science")
+    b_idx = branch_options.index(curr_branch) if curr_branch in branch_options else 0
+    p_branch = st.selectbox("Academic Branch", branch_options, index=b_idx)
+
+    col_sal, col_cpi = st.columns(2)
+    with col_sal:
+        p_salary = st.number_input(
+            "Expected CTC (LPA)",
+            min_value=1.0,
+            max_value=150.0,
+            value=float(st.session_state.student_profile.expected_salary),
+            step=0.5
+        )
+    with col_cpi:
+        p_cpi = st.number_input(
+            "CPI / CGPA",
+            min_value=0.0,
+            max_value=10.0,
+            value=float(getattr(st.session_state.student_profile, "cpi", 8.5)),
+            step=0.1,
+            help="Cumulative academic grade out of 10.0"
+        )
+
+    p_exp = st.number_input(
+        "Experience (Years)",
+        min_value=0.0,
+        max_value=20.0,
+        value=float(st.session_state.student_profile.experience),
+        step=0.5
+    )
+
     p_skills = st.text_area(
         "Technical Skills (comma-separated)",
         value=", ".join(st.session_state.student_profile.skills),
@@ -97,23 +141,6 @@ with st.sidebar:
         value=", ".join(st.session_state.student_profile.preferred_roles),
         help="Example: Software Engineer, Backend Developer"
     )
-    col_sal, col_exp = st.columns(2)
-    with col_sal:
-        p_salary = st.number_input(
-            "Expected CTC (LPA)",
-            min_value=1.0,
-            max_value=150.0,
-            value=float(st.session_state.student_profile.expected_salary),
-            step=0.5
-        )
-    with col_exp:
-        p_exp = st.number_input(
-            "Experience (Years)",
-            min_value=0.0,
-            max_value=20.0,
-            value=float(st.session_state.student_profile.experience),
-            step=0.5
-        )
 
     if st.button("💾 Save Profile", use_container_width=True):
         try:
@@ -122,9 +149,13 @@ with st.sidebar:
                 skills_raw=p_skills,
                 roles_raw=p_roles,
                 expected_salary_raw=p_salary,
-                experience_raw=p_exp
+                experience_raw=p_exp,
+                cpi_raw=p_cpi,
+                branch_raw=p_branch
             )
             st.session_state.student_profile = profile
+            st.session_state.match_results = None  # Invalidate previous matches
+            st.session_state.last_analysis = None
             st.success("Profile updated successfully!")
         except ProfileValidationError as e:
             st.error(str(e))
@@ -281,8 +312,8 @@ with tab_matching:
     st.header("🎯 Company Matching Engine")
     st.markdown(
         "A **deterministic, rule-based matching engine** that shortlists target firms based on your "
-        "skills, role preferences, expected CTC, and historical hiring patterns.  \n"
-        "*Formula: 50% Skill Match + 20% Role Match + 15% Salary Match + 15% Hiring History.*"
+        "skills, role preferences, expected CTC, branch eligibility, and minimum CPI cutoffs.  \n"
+        "*Formula: 50% Skill Match + 20% Role Match + 15% Salary Match + 15% Hiring & Eligibility (Volume, Branch & CPI).* "
     )
 
     col_btn, col_k = st.columns([3, 1])
@@ -318,7 +349,7 @@ with tab_matching:
                         st.progress(bd["skill_score"] / 100.0, text=f"Skills Match (50%): {bd['skill_score']}%")
                         st.progress(bd["role_score"] / 100.0, text=f"Role Match (20%): {bd['role_score']}%")
                         st.progress(bd["salary_score"] / 100.0, text=f"Salary Range Match (15%): {bd['salary_score']}%")
-                        st.progress(bd["hiring_score"] / 100.0, text=f"Hiring History (15%): {bd['hiring_score']}%")
+                        st.progress(bd["hiring_score"] / 100.0, text=f"Hiring & Eligibility (15%): {bd['hiring_score']}%")
 
                     with c_col2:
                         st.markdown("#### 💡 Detailed Reasoning:")

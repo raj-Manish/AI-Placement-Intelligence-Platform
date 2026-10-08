@@ -12,7 +12,7 @@ from app.database.connection import get_engine, get_session_factory, Base
 from app.database.models import Document, DocumentChunk, Company
 
 
-def init_database():
+def init_database(force_reseed_companies: bool = False):
     """Initializes the database schema and seeds benchmark company data."""
     print("=" * 60)
     print("AI Placement Intelligence Platform - Database Initializer")
@@ -34,12 +34,18 @@ def init_database():
         Base.metadata.create_all(bind=engine)
         print("   -> All tables created or verified successfully.")
 
-        # 3. Seed benchmark companies if table is empty
+        # 3. Seed benchmark companies
         Session = get_session_factory()
         with Session() as session:
             existing_count = session.query(Company).count()
-            if existing_count == 0:
-                print("Step 3: Seeding benchmark company dataset...")
+            if existing_count == 0 or force_reseed_companies:
+                if force_reseed_companies and existing_count > 0:
+                    print(f"Step 3: Refreshing benchmark companies (clearing {existing_count} existing)...")
+                    session.query(Company).delete()
+                    session.commit()
+                else:
+                    print("Step 3: Seeding benchmark company dataset...")
+
                 csv_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "companies.csv")
                 csv_path = os.path.abspath(csv_path)
 
@@ -64,7 +70,7 @@ def init_database():
                 else:
                     print(f"   -> Warning: {csv_path} not found. Skipping seeding.")
             else:
-                print(f"Step 3: Companies table already contains {existing_count} records. Skipping seeding.")
+                print(f"Step 3: Companies table already contains {existing_count} records. (Use force_reseed_companies=True to refresh).")
 
         print("=" * 60)
         print("Database initialization complete! Ready for RAG and matching.")

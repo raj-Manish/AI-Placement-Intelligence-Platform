@@ -168,6 +168,8 @@ def ask_copilot(
         user_message_parts.extend([
             "--- CANDIDATE STUDENT PROFILE ---",
             f"Name: {student_profile.get('name', 'Student')}",
+            f"Branch / Major: {student_profile.get('branch', 'Computer Science')}",
+            f"CPI / CGPA: {student_profile.get('cpi', 'N/A')}",
             f"Skills: {student_profile.get('skills', 'None specified')}",
             f"Preferred Roles: {student_profile.get('preferred_roles', 'None specified')}",
             f"Expected Salary: {student_profile.get('expected_salary', 'None specified')} LPA",
