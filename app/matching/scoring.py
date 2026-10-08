@@ -240,8 +240,10 @@ def calculate_hiring_history_score(
     notes = [track_desc]
 
     # 2. Branch Eligibility Check
-    if candidate_branch and eligible_branches and "all" not in eligible_branches:
-        if is_branch_eligible(candidate_branch, eligible_branches):
+    if candidate_branch and eligible_branches:
+        if "all" in eligible_branches:
+            notes.append("Branch eligible (Open to all branches)")
+        elif is_branch_eligible(candidate_branch, eligible_branches):
             notes.append(f"Branch eligible ({candidate_branch})")
         else:
             score -= 30.0
